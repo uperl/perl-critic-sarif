@@ -5,6 +5,12 @@ edition = "2021"
 authors = ["Dylan Hardison <dylan@hardison.net>"]
 license = "MIT"
 
+# warning: manifest has no description, documentation, homepage or repository.
+description = "Convert Perl::Critic violations to SARIF format"
+documentation = "https://github.com/dylanwh/perl-critic-sarif"
+homepage = "https://github.com/dylanwh/perl-critic-sarif"
+repository = "https://github.com/dylanwh/perl-critic-sarif"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
