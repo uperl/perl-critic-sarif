@@ -12,8 +12,30 @@ use serde_sarif::sarif::{
 };
 
 /// Convert Perl::Critic JSON violations to SARIF
+///
+/// Perl::Critic does not ship with a JSON output format, but you can write one trivially
+/// with a simple map over the list of violations.
+///
+/// say encode_json({
+///      perl_critic_version => $Perl::Critic::VERSION,
+///      violations => [map { violation_to_json($_) } @violations],
+/// });
+/// sub violation_to_json {
+///     my ($violation) = @_;
+///     return {
+///         filename => $violation->filename,
+///         line_number => $violation->line_number,
+///         column_number => $violation->column_number,
+///         severity => $violation->severity,
+///         source => $violation->source,
+///         policy => $violation->policy,
+///         description => $violation->description,
+///         explanation => $violation->explanation,
+///         diagnostics => $violation->diagnostics,
+///     };
+/// }
 #[derive(Debug, Parser)]
-#[command(version, about, long_about)]
+#[command(version, long_about, verbatim_doc_comment)]
 struct Args {
     /// input file; reads from stdin if not provided
     #[clap(short, long)]
@@ -128,7 +150,12 @@ impl TryFrom<Violation> for SarifResult {
         let location = LocationBuilder::default()
             .physical_location(
                 PhysicalLocationBuilder::default()
-                    .artifact_location(ArtifactLocationBuilder::default().uri(v.filename).build()?)
+                    .artifact_location(
+                        ArtifactLocationBuilder::default()
+                            .uri(format!("project/{}", v.filename))
+                            .uri_base_id("PROJECT")
+                            .build()?,
+                    )
                     .context_region(
                         RegionBuilder::default()
                             .start_line(v.line_number - 1)
@@ -201,6 +228,11 @@ fn version_control_provenance() -> Result<Vec<VersionControlDetails>> {
         .repository_uri(repo_url)
         .branch(branch)
         .revision_id(commit)
+        .mapped_to( ArtifactLocationBuilder::default()
+            .uri("project")
+            .uri_base_id("PROJECT")
+            .build()?
+        )
         .build()?;
     Ok(vec![details])
 }
